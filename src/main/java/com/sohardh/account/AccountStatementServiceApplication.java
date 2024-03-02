@@ -30,7 +30,7 @@ public class AccountStatementServiceApplication {
     @Override
     public void run(ApplicationArguments args) throws GeneralSecurityException, IOException {
 
-      mailService.getEmailBody("");
+      mailService.getEmailBody();
     }
   }
 

@@ -2,10 +2,10 @@ package com.sohardh.account.service;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.List;
+import java.util.Optional;
 
 public interface MailService {
 
-  List<String> getEmailBody(String label) throws GeneralSecurityException, IOException;
+  Optional<String> getEmailBody() throws GeneralSecurityException, IOException;
 
 }
