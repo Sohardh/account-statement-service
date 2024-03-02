@@ -1,9 +1,11 @@
 package com.sohardh.account;
 
+import com.sohardh.account.service.crawler.SmartStatementCrawlerService;
 import com.sohardh.account.service.mail.MailService;
 import com.sohardh.account.service.mail.parser.MailParserService;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
@@ -25,11 +27,14 @@ public class AccountStatementServiceApplication {
 
     private final MailService mailService;
     private final MailParserService mailParserService;
+    private final SmartStatementCrawlerService smartStatementCrawlerService;
 
     public MyApplicationRunner(@Qualifier("GmailServiceImpl") MailService mailService,
-        MailParserService mailParserService) {
+        MailParserService mailParserService,
+        SmartStatementCrawlerService smartStatementCrawlerService) {
       this.mailService = mailService;
       this.mailParserService = mailParserService;
+      this.smartStatementCrawlerService = smartStatementCrawlerService;
     }
 
 
@@ -38,7 +43,13 @@ public class AccountStatementServiceApplication {
 
       var emailBody = mailService.getEmailBody();
       var statementLink = mailParserService.getStatementLink(emailBody);
-      log.info(statementLink.get());
+      if (statementLink.isEmpty()) {
+        log.info("Statement Link not found!");
+        return;
+      }
+      log.info("Statement Link : {}", statementLink.get());
+      Optional<String> statementTable = smartStatementCrawlerService.getStatementTable(
+          statementLink.get());
     }
   }
 

@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "hdfc.username",
+      "type": "java.lang.String",
+      "description": "HDFC Username."
+    }
+  ] }
