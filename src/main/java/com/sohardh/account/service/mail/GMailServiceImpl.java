@@ -1,4 +1,4 @@
-package com.sohardh.account.service;
+package com.sohardh.account.service.mail;
 
 import static com.google.api.services.gmail.GmailScopes.GMAIL_READONLY;
 import static java.text.MessageFormat.format;
@@ -149,6 +149,7 @@ public class GMailServiceImpl implements MailService {
     // Set the day of the month to 1 to get the first day.
     var firstDay = today.withDayOfMonth(1);
 
-    return firstDay.format(DateTimeFormatter.ofPattern("yyy-dd-MM"));
+    String format = firstDay.format(DateTimeFormatter.ofPattern("yyy-MM-dd"));
+    return "2024-02-01";
   }
 }

@@ -1,4 +1,4 @@
-package com.sohardh.account.service;
+package com.sohardh.account.service.mail;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
