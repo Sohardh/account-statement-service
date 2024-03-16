@@ -1,7 +1,17 @@
 package com.sohardh.account.service.crawler;
 
+import com.sohardh.account.dto.Statement;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +31,7 @@ public class SmartStatementCrawlerService {
   }
 
 
-  public Optional<String> getStatementTable(String url) {
+  public List<Statement> getStatements(String url) {
 
     log.info("Crawling statements site..");
     try {
@@ -29,11 +39,18 @@ public class SmartStatementCrawlerService {
       login(url);
 
       // Get statement url
-      return getTable();
+      var table = getTable();
+      if (table.isEmpty()) {
+        return Collections.emptyList();
+      }
+
+      String tableHtml = table.get();
+
+      return getStatementsUsingTable(tableHtml);
 
     } catch (Exception e) {
       log.error("An exception occurred while crawling statements site.", e);
-      return Optional.empty();
+      return Collections.emptyList();
     } finally {
       webDriver.quit();
     }
@@ -64,6 +81,14 @@ public class SmartStatementCrawlerService {
     inputField.sendKeys(hdfcUserName);
     submitButton.click();
     log.info("Login Success.");
+  }
+
+  private Double parseDouble(String input) {
+    try {
+      return Double.parseDouble(input.replaceAll(",", ""));
+    } catch (Exception e) {
+      return null;
+    }
   }
 
 }

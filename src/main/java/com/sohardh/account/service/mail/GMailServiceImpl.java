@@ -150,6 +150,6 @@ public class GMailServiceImpl implements MailService {
     var firstDay = today.withDayOfMonth(1);
 
     String format = firstDay.format(DateTimeFormatter.ofPattern("yyy-MM-dd"));
-    return "2024-02-01";
+    return "2024-03-01";
   }
 }

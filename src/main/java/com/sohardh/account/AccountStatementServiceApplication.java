@@ -1,11 +1,12 @@
 package com.sohardh.account;
 
+import com.sohardh.account.dto.Statement;
 import com.sohardh.account.service.crawler.SmartStatementCrawlerService;
 import com.sohardh.account.service.mail.MailService;
 import com.sohardh.account.service.mail.parser.MailParserService;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Optional;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
@@ -48,8 +49,10 @@ public class AccountStatementServiceApplication {
         return;
       }
       log.info("Statement Link : {}", statementLink.get());
-      Optional<String> statementTable = smartStatementCrawlerService.getStatementTable(
+      List<Statement> statements = smartStatementCrawlerService.getStatements(
           statementLink.get());
+      statements.forEach(statement -> log.info(String.valueOf(statement)));
+
     }
   }
 
