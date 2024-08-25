@@ -32,7 +32,7 @@ public class MailParserTask implements Tasklet {
         .getExecutionContext();
     var lastDateString = (String) context.get("fetchDate");
     if (context.isEmpty() || isEmpty(lastDateString)) {
-      lastDateString = "2024-04-10";
+      lastDateString = "2024-04-01";
     }
     var lastDate = DateUtil.parseDate(lastDateString, YYYY_MM_DD);
     mailParserService.parseAndSaveStatementLinks(lastDate);

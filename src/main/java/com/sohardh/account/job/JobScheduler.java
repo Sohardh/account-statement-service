@@ -29,7 +29,7 @@ public class JobScheduler {
     log.info("Starting Account Statement Parser Service Job");
     var start = Instant.now();
     JobParameters params = new JobParametersBuilder()
-        .addLong("time", System.currentTimeMillis()) // Adds uniqueness
+        .addLong("startTime", System.currentTimeMillis()) // Adds uniqueness
         .toJobParameters();
     jobLauncher.run(accountStatementServiceJob, params);
     var end = Instant.now();
