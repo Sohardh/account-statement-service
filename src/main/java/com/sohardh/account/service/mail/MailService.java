@@ -2,10 +2,11 @@ package com.sohardh.account.service.mail;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.List;
 
 public interface MailService {
 
-  Optional<String> getEmailBody() throws GeneralSecurityException, IOException;
+  List<String> getEmailBodies(LocalDate lastDate) throws GeneralSecurityException, IOException;
 
 }

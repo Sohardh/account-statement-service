@@ -1,8 +1,6 @@
 package com.sohardh.account.dto;
 
-import java.util.Date;
-
-public record Statement(Date date,
+public record Statement(String date,
                         String description,
                         String refNo,
                         String valueDate,

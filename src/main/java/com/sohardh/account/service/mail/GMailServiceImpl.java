@@ -1,6 +1,7 @@
 package com.sohardh.account.service.mail;
 
 import static com.google.api.services.gmail.GmailScopes.GMAIL_READONLY;
+import static com.sohardh.account.util.DateUtil.getFirstDateOfTheMonth;
 import static java.text.MessageFormat.format;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
@@ -17,6 +18,7 @@ import com.google.api.client.util.Value;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
+import com.google.api.services.gmail.model.ListMessagesResponse;
 import com.google.api.services.gmail.model.Message;
 import com.google.api.services.gmail.model.MessagePart;
 import java.io.File;
@@ -27,12 +29,10 @@ import java.security.GeneralSecurityException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.Stack;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
@@ -53,8 +53,8 @@ public class GMailServiceImpl implements MailService {
   private String appName;
 
   @Override
-  public Optional<String> getEmailBody() throws GeneralSecurityException, IOException {
-    return getEmail();
+  public List<String> getEmailBodies(LocalDate lastDate) throws GeneralSecurityException, IOException {
+    return getEmails(lastDate);
   }
 
 
@@ -82,74 +82,72 @@ public class GMailServiceImpl implements MailService {
     return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
   }
 
-  private Optional<String> getEmail() throws GeneralSecurityException, IOException {
+  private List<String> getEmails(LocalDate lastDate) throws GeneralSecurityException, IOException {
     final var HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
     var service = new Gmail.Builder(HTTP_TRANSPORT, JSON_FACTORY,
         getCredentials(HTTP_TRANSPORT)).setApplicationName(appName).build();
 
     String user = "me";
     String query = format("from:hdfcbanksmartstatement@hdfcbank.net and after:{0}",
-        getFirstDateOfTheMonth());
-    var response = service.users().messages().list(user)
-        .setQ(query)
-        .setMaxResults(5L)
-        .execute();
+        getFirstDateOfTheMonth(lastDate));
+
+    ListMessagesResponse response;
+    try {
+      response = service.users().messages().list(user)
+          .setQ(query)
+          .setMaxResults(100L)
+          .execute();
+    } catch (Exception e) {
+      log.error("Error occurred while fetching statements from gmail", e);
+      throw new RuntimeException(e);
+    }
 
     if (isEmpty(response.getMessages())) {
       log.info("No new statement found on date : {}", dateFormat.format(new Date()));
-      return Optional.empty();
+      return Collections.emptyList();
     }
 
     var messageIds = response.getMessages().stream().map(Message::getId).toList();
 
-    if (messageIds.size() > 1) {
-      log.info("Found more than 2 emails! Skipping parsing.");
-      return Optional.empty();
-    }
-
-    log.info("Found account statement email with id : {}", messageIds.get(0));
-    return getMessageBody(service, user, messageIds.get(0));
+    log.info("Found account statements email with ids : {}", messageIds);
+    return getMessageBody(service, user, messageIds);
   }
 
-  private Optional<String> getMessageBody(Gmail service, String userId, String messageId)
+  private List<String> getMessageBody(Gmail service, String userId, List<String> messageIds)
       throws IOException {
-    log.info("Fetching email content for messageId : {}", messageId);
-    Message message = service.users().messages().get(userId, messageId).execute();
-    // Check if the message has parts (it could be plain text)
-    if (message.getPayload().getParts() == null) {
-      return Optional.ofNullable(message.getPayload().getBody().getData());
-    }
-
-    var data = new ArrayList<String>();
-    var parts = new Stack<MessagePart>();
-    parts.addAll(message.getPayload() != null && !isEmpty(message.getPayload().getParts())
-        ? message.getPayload().getParts() : Collections.emptyList());
-
-    while (!parts.isEmpty()) {
-      var part = parts.pop();
-      parts.addAll(part.getParts() != null
-          ? part.getParts() : Collections.emptyList());
-      if (part.getBody().getData() != null) {
-        byte[] decodedData = Base64.decodeBase64(part.getBody().getData());
-        data.add(new String(decodedData, StandardCharsets.UTF_8));
+    var messageBodies = new ArrayList<String>();
+    for (String messageId : messageIds) {
+      log.info("Fetching email content for messageId : {}", messageId);
+      Message message = service.users().messages().get(userId, messageId).execute();
+      // Check if the message has parts (it could be plain text)
+      if (message.getPayload().getParts() == null) {
+        messageBodies.add(message.getPayload().getBody().getData());
+        continue;
       }
-    }
 
-    if (data.isEmpty()) {
-      log.info("Email Content not found for messageId : {}", messageId);
-      return Optional.empty();
-    }
+      var data = new ArrayList<String>();
+      var parts = new Stack<MessagePart>();
+      parts.addAll(message.getPayload() != null && !isEmpty(message.getPayload().getParts())
+          ? message.getPayload().getParts() : Collections.emptyList());
 
-    return Optional.of(String.join("\n", data));
+      while (!parts.isEmpty()) {
+        var part = parts.pop();
+        parts.addAll(part.getParts() != null
+            ? part.getParts() : Collections.emptyList());
+        if (part.getBody().getData() != null) {
+          byte[] decodedData = Base64.decodeBase64(part.getBody().getData());
+          data.add(new String(decodedData, StandardCharsets.UTF_8));
+        }
+      }
+
+      if (data.isEmpty()) {
+        log.info("Email Content not found for messageId : {}", messageId);
+        continue;
+      }
+
+      messageBodies.add(String.join("\n", data));
+    }
+    return messageBodies;
   }
 
-  private String getFirstDateOfTheMonth() {
-    var today = LocalDate.now();
-
-    // Set the day of the month to 1 to get the first day.
-    var firstDay = today.withDayOfMonth(1);
-
-    String format = firstDay.format(DateTimeFormatter.ofPattern("yyy-MM-dd"));
-    return "2024-03-01";
-  }
 }
