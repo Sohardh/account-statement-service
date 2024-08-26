@@ -1,5 +1,7 @@
 package com.sohardh.account.model;
 
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+
 import io.hypersistence.utils.hibernate.type.array.StringArrayType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,8 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.Arrays;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -49,9 +50,9 @@ public class FireflyStatement {
   @Column(name = "ts_processed_at")
   private LocalDate processedAt;
 
-  @Column(name = "arr_tags")
   @Type(StringArrayType.class)
-  private List<String> tags;
+  @Column(name = "arr_tags", columnDefinition = "text[]")
+  private String[] tags;
 
   @Column(name = "tx_category")
   private String category;
@@ -67,13 +68,19 @@ public class FireflyStatement {
     this.date = statementModel.getValueDate();
     this.debit = statementModel.getDebit();
     this.credit = statementModel.getCredit();
-    this.internalReference = UUID.randomUUID() + "-" + statementModel.getRefNo();
+    this.internalReference = statementModel.getInternalReference();
   }
+
   public FireflyStatement addTag(String tag) {
-    if (this.tags == null) {
-      this.tags = new ArrayList<>();
+    if (isEmpty(tag)) {
+      return this;
     }
-    this.tags.add(tag);
+    if (this.tags == null) {
+      this.tags = new String[]{tag};
+    }
+    var tagsList = new ArrayList<>(Arrays.asList(this.tags));
+    tagsList.add(tag);
+    this.tags = tagsList.stream().distinct().toList().toArray(new String[0]);
     return this;
   }
 }

@@ -6,6 +6,7 @@ import com.sohardh.account.repositories.FireflyStatementRepository;
 import com.sohardh.account.repositories.StatementRepository;
 import java.time.LocalDate;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -27,18 +28,67 @@ public class CategorizationService {
     var fireflyStatements = statements.stream().map(this::analyzeTransactions).toList();
     fireflyStatementRepository.saveAll(fireflyStatements);
     statementRepository.saveAll(statements);
-    log.info("Regex categorization finished. Total categorized statements: {}", fireflyStatements.size());
+    log.info("Regex categorization finished. Total categorized statements: {}",
+        fireflyStatements.size());
   }
 
   private FireflyStatement analyzeTransactions(StatementModel statementModel) {
     var fireflyStatement = new FireflyStatement(statementModel);
     parseAndPopulateUpi(fireflyStatement);
+    parseAndPopulateStocksDebit(fireflyStatement);
+    parseAndPopulateStocksCredit(fireflyStatement);
     parseAndPopulateHdfc(fireflyStatement);
     parseAndPopulateSalary(fireflyStatement);
     parseAndPopulateMisc(fireflyStatement);
     statementModel.setIsProcessed(true);
     statementModel.setProcessedAt(LocalDate.now());
+    if (StringUtils.isEmpty(fireflyStatement.getOpposingAccount())) {
+      fireflyStatement.setOpposingAccount("Unknown");
+    }
     return fireflyStatement;
+  }
+
+  private void parseAndPopulateStocksDebit(FireflyStatement fireflyStatement) {
+    var description = fireflyStatement.getDescription();
+    if (!description.startsWith("ACH D-")) {
+      return;
+    }
+    fireflyStatement.addTag("stock");
+    fireflyStatement.setCategory("stock");
+
+    String[] split = description.split("-");
+    if (split.length <= 1) {
+      return;
+    }
+
+    if (description.contains("SBISMSMFB")) {
+      fireflyStatement.setOpposingAccount("SBI Mutual Funds");
+      fireflyStatement.addTag("mutual_funds");
+    } else if (description.contains("INDIAN CLEARING CORP")) {
+      fireflyStatement.setOpposingAccount("Groww Mutual Funds");
+      fireflyStatement.addTag("mutual_funds");
+    }
+
+  }
+
+  private void parseAndPopulateStocksCredit(FireflyStatement fireflyStatement) {
+    var description = fireflyStatement.getDescription();
+    if (!description.startsWith("ACH C-") || !description.startsWith("TATA MOTORS LTD ORD DIV")) {
+      return;
+    }
+    fireflyStatement.addTag("stock");
+    fireflyStatement.setCategory("stock");
+
+    String[] split = description.split("-");
+    if (split.length <= 1) {
+      return;
+    }
+    if (description.startsWith("TATA MOTORS LTD ORD DIV")) {
+      fireflyStatement.setOpposingAccount("Tata Motors Ltd");
+    } else {
+      fireflyStatement.setOpposingAccount(split[1]);
+    }
+    fireflyStatement.addTag("dividend");
   }
 
   private static void parseAndPopulateMisc(FireflyStatement fireflyStatement) {
@@ -97,7 +147,7 @@ public class CategorizationService {
     fireflyStatement.addTag("UPI");
 
     String[] split = description.split("-");
-    if (split.length != 2) {
+    if (split.length <= 1) {
       return;
     }
     String opAccName = split[1];

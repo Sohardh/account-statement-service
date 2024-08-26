@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,6 +25,9 @@ public class StatementModel {
   @Column(name = "id_statement")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long statementId;
+
+  @Column(name = "tx_internal_reference", nullable = false)
+  private String internalReference;
 
   @Column(name = "ts_date", nullable = false)
   private LocalDate date;
@@ -60,5 +64,6 @@ public class StatementModel {
     this.debit = statement.debit();
     this.credit = statement.credit();
     this.closingBalance = statement.closingBalance();
+    this.internalReference = UUID.randomUUID() + "-" + statement.refNo();
   }
 }

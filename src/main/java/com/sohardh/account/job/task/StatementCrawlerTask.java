@@ -24,7 +24,8 @@ public class StatementCrawlerTask implements Tasklet {
   private final StatementRepository statementRepository;
 
   public StatementCrawlerTask(SmartStatementCrawlerService smartStatementCrawlerService,
-      JobStatementUrlRepository jobStatementUrlRepository, StatementRepository statementRepository) {
+      JobStatementUrlRepository jobStatementUrlRepository,
+      StatementRepository statementRepository) {
     this.smartStatementCrawlerService = smartStatementCrawlerService;
     this.jobStatementUrlRepository = jobStatementUrlRepository;
     this.statementRepository = statementRepository;
@@ -46,15 +47,15 @@ public class StatementCrawlerTask implements Tasklet {
         continue;
       }
 
-      var refNos = statements.stream().map(Statement::refNo).toList();
+      var descriptions = statements.stream().map(Statement::description).toList();
 
-      var existingRefNos = statementRepository.findAllByRefNo(refNos).stream()
-          .map(StatementModel::getRefNo).toList();
-      if (!existingRefNos.isEmpty()) {
-        log.info("{} statements are existing. Skipping them.", existingRefNos.size());
+      var existingDesc = statementRepository.findAllByDescriptions(descriptions).stream()
+          .map(StatementModel::getDescription).toList();
+      if (!existingDesc.isEmpty()) {
+        log.info("{} statements are existing. Skipping them.", existingDesc.size());
       }
       var newStatements = statements.stream()
-          .filter(statement -> !existingRefNos.contains(statement.refNo()))
+          .filter(statement -> !existingDesc.contains(statement.description()))
           .map(StatementModel::new)
           .toList();
       log.info("Found {} new statements. Saving them...", newStatements.size());
@@ -66,6 +67,6 @@ public class StatementCrawlerTask implements Tasklet {
       Thread.sleep(5_000);
     }
 
-    return RepeatStatus.CONTINUABLE;
+    return RepeatStatus.FINISHED;
   }
 }
