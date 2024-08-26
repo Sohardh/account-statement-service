@@ -5,6 +5,7 @@ import com.sohardh.account.model.StatementModel;
 import com.sohardh.account.repositories.FireflyStatementRepository;
 import com.sohardh.account.repositories.StatementRepository;
 import java.time.LocalDate;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,19 @@ public class CategorizationService {
   public void categorize() {
     var statements = statementRepository.findAllNotProcessed();
     log.info("Starting regex categorization of {} statements", statements.size());
-    var fireflyStatements = statements.stream().map(this::analyzeTransactions).toList();
+
+    List<String> internalReferences = statements.stream()
+        .map(StatementModel::getInternalReference)
+        .toList();
+    var existingInternalReferences = fireflyStatementRepository.getAllByInternalReferences(
+        internalReferences).stream().map(FireflyStatement::getInternalReference).toList();
+
+    var fireflyStatements = statements.stream()
+        .filter(statementModel -> !existingInternalReferences.contains(
+            statementModel.getInternalReference()))
+        .map(this::analyzeTransactions)
+        .toList();
+
     fireflyStatementRepository.saveAll(fireflyStatements);
     statementRepository.saveAll(statements);
     log.info("Regex categorization finished. Total categorized statements: {}",
