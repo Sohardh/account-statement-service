@@ -53,7 +53,8 @@ public class GMailServiceImpl implements MailService {
   private String appName;
 
   @Override
-  public List<String> getEmailBodies(LocalDate lastDate) throws GeneralSecurityException, IOException {
+  public List<String> getEmailBodies(LocalDate lastDate)
+      throws GeneralSecurityException, IOException, InterruptedException {
     return getEmails(lastDate);
   }
 
@@ -82,7 +83,8 @@ public class GMailServiceImpl implements MailService {
     return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
   }
 
-  private List<String> getEmails(LocalDate lastDate) throws GeneralSecurityException, IOException {
+  private List<String> getEmails(LocalDate lastDate)
+      throws GeneralSecurityException, IOException, InterruptedException {
     final var HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
     var service = new Gmail.Builder(HTTP_TRANSPORT, JSON_FACTORY,
         getCredentials(HTTP_TRANSPORT)).setApplicationName(appName).build();
@@ -114,11 +116,12 @@ public class GMailServiceImpl implements MailService {
   }
 
   private List<String> getMessageBody(Gmail service, String userId, List<String> messageIds)
-      throws IOException {
+      throws IOException, InterruptedException {
     var messageBodies = new ArrayList<String>();
     for (String messageId : messageIds) {
       log.info("Fetching email content for messageId : {}", messageId);
       Message message = service.users().messages().get(userId, messageId).execute();
+      Thread.sleep(500); // throttle subsequent requests
       // Check if the message has parts (it could be plain text)
       if (message.getPayload().getParts() == null) {
         messageBodies.add(message.getPayload().getBody().getData());

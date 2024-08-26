@@ -10,4 +10,7 @@ public interface JobStatementUrlRepository extends JpaRepository<JobStatementUrl
   @Query("from JobStatementUrlModel s where s.url in (?1)")
   List<JobStatementUrlModel> findAllByUrl(List<String> urls);
 
+  @Query("from JobStatementUrlModel s where s.isProcessed = false ")
+  List<JobStatementUrlModel> findAllNotProcessed();
+
 }

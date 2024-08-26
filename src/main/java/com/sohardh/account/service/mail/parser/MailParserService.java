@@ -62,7 +62,7 @@ public class MailParserService {
     var urls = linksList.stream().filter(link -> !existingUrls.contains(link))
         .map(JobStatementUrlModel::new).toList();
     if (urls.isEmpty()) {
-      log.info("No new emails found. Skipping parsing!");
+      log.info("No new urls found. Skipping save!");
       return;
     }
     log.info("Saving {} newly found Urls.", urls.size());

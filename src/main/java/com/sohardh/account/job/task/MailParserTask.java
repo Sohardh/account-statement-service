@@ -1,13 +1,18 @@
 package com.sohardh.account.job.task;
 
 
+import static com.sohardh.account.job.JobConfiguration.ACCOUNT_STATEMENT_SERVICE_JOB;
 import static com.sohardh.account.util.DateUtil.YYYY_MM_DD;
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
+import com.google.gson.Gson;
+import com.sohardh.account.dto.JobContext;
+import com.sohardh.account.model.JobStatementContextModel;
+import com.sohardh.account.repositories.JobStatementContextRepository;
 import com.sohardh.account.service.mail.parser.MailParserService;
 import com.sohardh.account.util.DateUtil;
 import jakarta.transaction.Transactional;
-import jakarta.transaction.Transactional.TxType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -20,23 +25,46 @@ import org.springframework.stereotype.Component;
 public class MailParserTask implements Tasklet {
 
   private final MailParserService mailParserService;
+  private final JobStatementContextRepository jobStatementContextRepository;
 
-  public MailParserTask(MailParserService mailParserService) {
+  public MailParserTask(MailParserService mailParserService,
+      JobStatementContextRepository jobStatementContextRepository) {
     this.mailParserService = mailParserService;
+    this.jobStatementContextRepository = jobStatementContextRepository;
   }
 
   @Override
-  @Transactional(value = TxType.REQUIRES_NEW)
+  @Transactional
   public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
-    var context = chunkContext.getStepContext().getStepExecution().getJobExecution()
-        .getExecutionContext();
-    var lastDateString = (String) context.get("fetchDate");
-    if (context.isEmpty() || isEmpty(lastDateString)) {
-      lastDateString = "2024-04-01";
-    }
-    var lastDate = DateUtil.parseDate(lastDateString, YYYY_MM_DD);
+    var context = jobStatementContextRepository.findByJobName(
+        ACCOUNT_STATEMENT_SERVICE_JOB);
+    var lastDate = DateUtil.parseDate(getLastDateString(context), YYYY_MM_DD);
+    log.info("Current fetch date is  : {}", lastDate);
     mailParserService.parseAndSaveStatementLinks(lastDate);
-    context.put("fetchDate", DateUtil.convertToString(DateUtil.getNextMonth(lastDate), YYYY_MM_DD));
+    var fetchDate = DateUtil.convertToString(DateUtil.getNextMonth(lastDate), YYYY_MM_DD);
+    log.info("Saving next fetch date: {}", fetchDate);
+    saveContext(context, fetchDate);
+
     return RepeatStatus.FINISHED;
+  }
+
+  private void saveContext(JobStatementContextModel context, String fetchDate) {
+    if (isNull(context)) {
+      context = new JobStatementContextModel();
+      context.setTxJobName(ACCOUNT_STATEMENT_SERVICE_JOB);
+    }
+    context.setContext(new Gson().toJson(new JobContext(fetchDate)));
+    jobStatementContextRepository.save(context);
+  }
+
+  private static String getLastDateString(JobStatementContextModel context) {
+    String lastDateString;
+    if (isNull(context) || isNull(context.getContext()) ||
+        isEmpty(context.getContext().fetchDate())) {
+      lastDateString = "2024-04-01";
+    } else {
+      lastDateString = context.getContext().fetchDate();
+    }
+    return lastDateString;
   }
 }

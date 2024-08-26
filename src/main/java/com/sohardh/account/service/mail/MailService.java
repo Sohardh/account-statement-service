@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface MailService {
 
-  List<String> getEmailBodies(LocalDate lastDate) throws GeneralSecurityException, IOException;
+  List<String> getEmailBodies(LocalDate lastDate)
+      throws GeneralSecurityException, IOException, InterruptedException;
 
 }

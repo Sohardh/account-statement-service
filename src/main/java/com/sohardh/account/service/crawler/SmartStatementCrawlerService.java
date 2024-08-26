@@ -1,11 +1,9 @@
 package com.sohardh.account.service.crawler;
 
 import com.sohardh.account.dto.Statement;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import jakarta.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -33,27 +31,18 @@ public class SmartStatementCrawlerService {
 
   public List<Statement> getStatements(String url) {
 
-    log.info("Crawling statements site..");
-    try {
-      // Navigate to Login page
-      login(url);
+    log.info("Crawling statements site with url {}", url);
+    // Navigate to Login page
+    login(url);
 
-      // Get statement url
-      var table = getTable();
-      if (table.isEmpty()) {
-        return Collections.emptyList();
-      }
-
-      String tableHtml = table.get();
-
-      return getStatementsUsingTable(tableHtml);
-
-    } catch (Exception e) {
-      log.error("An exception occurred while crawling statements site.", e);
+    // Get statement url
+    var table = getTable();
+    if (table.isEmpty()) {
       return Collections.emptyList();
-    } finally {
-      webDriver.quit();
     }
+
+    String tableHtml = table.get();
+    return getStatementsUsingTable(tableHtml);
   }
 
   public List<Statement> getStatementsUsingTable(String tableHtml) {
@@ -74,15 +63,6 @@ public class SmartStatementCrawlerService {
       }
     }
     return statements;
-  }
-
-  private static Date getDate(String date) {
-    try {
-      return new SimpleDateFormat("dd/MM/yyyy").parse(date);
-    } catch (ParseException e) {
-      log.error("Exception occurred while parsing date", e);
-      throw new RuntimeException(e);
-    }
   }
 
   private Optional<String> getTable() {
@@ -120,4 +100,8 @@ public class SmartStatementCrawlerService {
     }
   }
 
+  @PreDestroy
+  public void destroy() {
+    webDriver.quit();
+  }
 }

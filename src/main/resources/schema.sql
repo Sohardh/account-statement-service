@@ -11,8 +11,8 @@ create table if not exists account_service.statements
     nu_debit           double precision,
     nu_credit          double precision,
     nu_closing_balance double precision not null,
-    constraint statements_description_date_unique
-        unique (tx_ref_no)
+    constraint statements_description_ref_no_unique
+        unique (tx_description, tx_ref_no)
 );
 
 create index if not exists statements_ts_date_index
@@ -30,6 +30,15 @@ create table if not exists account_service.job_statement_urls
     ts_created_at         timestamp without time zone not null,
     bl_processed          boolean                     not null,
     ts_processed_at       timestamp without time zone,
-        constraint job_statement_urls_tx_url_unique
-            unique (tx_url)
+    constraint job_statement_urls_tx_url_unique
+        unique (tx_url)
 );
+
+drop table if exists account_service.job_statement_context;
+create table if not exists account_service.job_statement_context
+(
+    tx_job_name text not null
+        constraint job_statement_context_pk
+            primary key,
+    js_context  text
+)
