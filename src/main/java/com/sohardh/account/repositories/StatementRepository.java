@@ -11,4 +11,7 @@ public interface StatementRepository extends JpaRepository<StatementModel, Long>
   @Query("from StatementModel s where s.refNo in (?1)")
   List<StatementModel> findAllByRefNo(List<String> refNo);
 
+  @Query("from StatementModel s where s.isProcessed = false")
+  List<StatementModel> findAllNotProcessed();
+
 }

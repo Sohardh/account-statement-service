@@ -46,9 +46,15 @@ public class StatementModel {
   @Column(name = "nu_closing_balance", nullable = false)
   private Double closingBalance;
 
+  @Column(name = "bl_processed", nullable = false)
+  private Boolean isProcessed = false;
+
+  @Column(name = "ts_processed_at")
+  private LocalDate processedAt;
+
   public StatementModel(Statement statement) {
-    this.date = DateUtil.parseDate(statement.date(),"dd/MM/yyyy");
-    this.valueDate = DateUtil.parseDate(statement.valueDate(),"dd-MM-yyyy");
+    this.date = DateUtil.parseDate(statement.date(), "dd/MM/yyyy");
+    this.valueDate = DateUtil.parseDate(statement.valueDate(), "dd-MM-yyyy");
     this.description = statement.description();
     this.refNo = statement.refNo();
     this.debit = statement.debit();

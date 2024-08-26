@@ -1,5 +1,6 @@
 package com.sohardh.account.job;
 
+import com.sohardh.account.job.task.CategorizationTask;
 import com.sohardh.account.job.task.MailParserTask;
 import com.sohardh.account.job.task.StatementCrawlerTask;
 import lombok.extern.slf4j.Slf4j;
@@ -22,18 +23,19 @@ public class JobConfiguration {
 
   @Bean
   public Job accountStatementServiceJob(JobRepository jobRepository, Step mailParserStep,
-      Step statementCrawlerStep) {
+      Step statementCrawlerStep, Step categorizationStep) {
     return new JobBuilder(ACCOUNT_STATEMENT_SERVICE_JOB, jobRepository)
         .start(mailParserStep)
         .next(statementCrawlerStep)
+        .next(categorizationStep)
         .build();
   }
 
   @Bean
   public Step mailParserStep(JobRepository jobRepository,
-      PlatformTransactionManager platformTransactionManager, MailParserTask mailParserTask) {
+      PlatformTransactionManager platformTransactionManager, MailParserTask task) {
     return new StepBuilder("mailParserStep", jobRepository)
-        .tasklet(mailParserTask, platformTransactionManager)
+        .tasklet(task, platformTransactionManager)
         .build();
   }
 
@@ -45,4 +47,11 @@ public class JobConfiguration {
         .build();
   }
 
+  @Bean
+  public Step categorizationStep(JobRepository jobRepository,
+      PlatformTransactionManager platformTransactionManager, CategorizationTask task) {
+    return new StepBuilder("categorizationStep", jobRepository)
+        .tasklet(task, platformTransactionManager)
+        .build();
+  }
 }

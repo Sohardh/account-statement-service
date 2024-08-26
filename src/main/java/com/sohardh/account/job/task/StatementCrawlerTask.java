@@ -6,6 +6,7 @@ import com.sohardh.account.model.StatementModel;
 import com.sohardh.account.repositories.JobStatementUrlRepository;
 import com.sohardh.account.repositories.StatementRepository;
 import com.sohardh.account.service.crawler.SmartStatementCrawlerService;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.StepContribution;
@@ -58,6 +59,9 @@ public class StatementCrawlerTask implements Tasklet {
           .toList();
       log.info("Found {} new statements. Saving them...", newStatements.size());
       statementRepository.saveAll(newStatements);
+      model.setIsProcessed(true);
+      model.setProcessedAt(LocalDate.now());
+      jobStatementUrlRepository.save(model);
       // throttle subsequent requests
       Thread.sleep(5_000);
     }
