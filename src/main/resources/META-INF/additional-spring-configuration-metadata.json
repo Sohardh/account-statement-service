@@ -4,5 +4,10 @@
       "name": "hdfc.username",
       "type": "java.lang.String",
       "description": "HDFC Username."
+    },
+    {
+      "name": "job.company.name",
+      "type": "java.lang.String",
+      "description": "Name of the company you work in."
     }
   ] }

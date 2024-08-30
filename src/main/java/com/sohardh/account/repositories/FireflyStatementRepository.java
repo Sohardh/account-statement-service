@@ -9,4 +9,7 @@ public interface FireflyStatementRepository extends JpaRepository<FireflyStateme
 
   @Query("from FireflyStatement f where f.internalReference in (?1)")
   List<FireflyStatement> getAllByInternalReferences(List<String> internalReferences);
+
+  @Query("from FireflyStatement f where f.isProcessed = false ")
+  List<FireflyStatement> findAllNotProcessed();
 }

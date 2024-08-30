@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -16,6 +17,9 @@ public class CategorizationService {
 
   private final StatementRepository statementRepository;
   private final FireflyStatementRepository fireflyStatementRepository;
+
+  @Value("${job.company.name}")
+  private static String jobCompanyName;
 
   public CategorizationService(StatementRepository statementRepository,
       FireflyStatementRepository fireflyStatementRepository) {
@@ -145,8 +149,8 @@ public class CategorizationService {
 
   private static void parseAndPopulateSalary(FireflyStatement fireflyStatement) {
     String description = fireflyStatement.getDescription();
-    if (description.contains("BLUEOPTIMA")) {
-      fireflyStatement.setOpposingAccount("Blueoptima");
+    if (description.contains(jobCompanyName) || description.contains("salary")) {
+      fireflyStatement.setOpposingAccount(jobCompanyName);
       fireflyStatement.addTag("salary");
       fireflyStatement.setCategory("salary");
     }
