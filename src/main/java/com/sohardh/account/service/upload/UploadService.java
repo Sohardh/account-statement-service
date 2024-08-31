@@ -10,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -78,7 +80,7 @@ public class UploadService {
     bodyBuilder.part("importable", new FileSystemResource(Path.of(statementPath)));
     bodyBuilder.part("json", new FileSystemResource(Path.of(fireflyImportConfigPath.getURI())));
     log.info("Uploading statements...");
-
+    var start = Instant.now();
     return webClient.post()
         .uri(uriBuilder -> uriBuilder.queryParam("secret", autoImportSecret).build())
         .contentType(MediaType.MULTIPART_FORM_DATA)
@@ -86,7 +88,8 @@ public class UploadService {
         .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
         .retrieve()
         .bodyToMono(String.class)
-        .doOnNext(s -> log.info("Statements uploaded successfully : {}", s));
+        .doOnNext(s -> log.info("Statements uploaded successfully : {}, took : {}s", s,
+            Duration.between(start, Instant.now()).toSeconds()));
   }
 
   private void writeToCsv(List<FireflyStatement> statements, File filePath) throws IOException {
