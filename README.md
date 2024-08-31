@@ -9,3 +9,9 @@ The service is responsible of the followings :
 1. Spring boot
 2. Gmail API
 3. Spring Batch
+
+## Building
+To build with docker image
+```shell
+./gradlew build
+```
