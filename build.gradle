@@ -2,11 +2,16 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.3'
     id 'io.spring.dependency-management' version '1.1.4'
+    id 'com.palantir.docker' version '0.36.0'
 }
 
 group = 'com.sohardh'
-version = '0.0.1-SNAPSHOT'
+archivesBaseName = 'account-statement-service'
+version = 'v0.0.1'
 
+java {
+    sourceCompatibility = '17'
+}
 
 configurations {
     compileOnly {
@@ -35,8 +40,23 @@ dependencies {
     implementation group: 'io.github.bonigarcia', name: 'webdrivermanager', version: '5.7.0'
     implementation 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-// https://mvnrepository.com/artifact/io.hypersistence/hypersistence-utils-hibernate-63
     implementation group: 'io.hypersistence', name: 'hypersistence-utils-hibernate-63', version: '3.8.2'
     implementation 'org.apache.commons:commons-csv:1.11.0'
+}
 
+
+bootJar {
+    archiveFileName = "${archiveBaseName}.jar"
+}
+
+docker {
+    name "${archivesBaseName}:${version}"
+    tag "-latest", "${archivesBaseName}:latest"
+    files tasks.bootJar.outputs.files
+    buildArgs(['JAR_FILE': tasks.bootJar.archiveFileName.get()])
+
+}
+
+tasks.named('build') {
+    dependsOn(tasks.docker)
 }
