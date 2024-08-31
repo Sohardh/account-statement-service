@@ -11,23 +11,29 @@ services:
       - "5432:5432"
     volumes:
       - db:/var/lib/postgresql/data
+    networks:
+      - account_statement_service_network
   account-statement-service:
-    image: account-statement-service:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: account-statement-service:v0.0.2
+    shm_size: '1gb'
     environment:
-      dbUrl: jdbc:postgresql://localhost:5432/account_service
+      dbUrl: jdbc:postgresql://postgres:5432/account_service
       dbUsername: root
       dbPassword: secret
-      hdfcUsername : <user_name>
-      jobCompanyName : <job_name>
-      autoImportSecret : <import_secret>
-      autoImportUrl : <import_url>
-      autoImportToken : <import_token>
+      hdfcUsername: <user_name>
+      jobCompanyName: <job_name>
+      autoImportSecret: <import_secret>
+      autoImportUrl: <import_url>
+      autoImportToken: <import_token>
     depends_on:
       - postgres
     ports:
       - "8080:8080"
+    networks:
+      - account_statement_service_network
 volumes:
-  postgres_data:
+  db:
+
+networks:
+  account_statement_service_network:
+    driver: bridge

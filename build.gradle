@@ -5,9 +5,9 @@ plugins {
     id 'com.palantir.docker' version '0.36.0'
 }
 
+def artifactName = 'account-statement-service'
 group = 'com.sohardh'
-archivesBaseName = 'account-statement-service'
-version = 'v0.0.1'
+version = 'v0.0.2'
 
 java {
     sourceCompatibility = '17'
@@ -44,14 +44,13 @@ dependencies {
     implementation 'org.apache.commons:commons-csv:1.11.0'
 }
 
-
 bootJar {
-    archiveFileName = "${archiveBaseName}.jar"
+    archiveFileName.set("${artifactName}.jar")
 }
 
 docker {
-    name "${archivesBaseName}:${version}"
-    tag "-latest", "${archivesBaseName}:latest"
+    name "${artifactName}:${version}"
+    tag "-latest", "${artifactName}:latest"
     files tasks.bootJar.outputs.files
     buildArgs(['JAR_FILE': tasks.bootJar.archiveFileName.get()])
 
