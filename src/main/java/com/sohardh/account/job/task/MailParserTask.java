@@ -13,6 +13,7 @@ import com.sohardh.account.repositories.JobStatementContextRepository;
 import com.sohardh.account.service.mail.parser.MailParserService;
 import com.sohardh.account.util.DateUtil;
 import jakarta.transaction.Transactional;
+import java.time.LocalDate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -61,7 +62,7 @@ public class MailParserTask implements Tasklet {
     String lastDateString;
     if (isNull(context) || isNull(context.getContext()) ||
         isEmpty(context.getContext().fetchDate())) {
-      lastDateString = "2024-04-01";
+      lastDateString = DateUtil.convertToString(LocalDate.now(), YYYY_MM_DD);
     } else {
       lastDateString = context.getContext().fetchDate();
     }

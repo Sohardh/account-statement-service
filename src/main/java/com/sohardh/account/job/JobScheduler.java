@@ -23,8 +23,7 @@ public class JobScheduler {
     this.accountStatementServiceJob = accountStatementServiceJob;
   }
 
-  //  @Scheduled(cron = "* * * * */5 ?")
-  @Scheduled(fixedDelay = 60_000)
+  @Scheduled(cron = "0 0 0 10 * ?")
   public void runJob() throws Exception {
     log.info("Starting Account Statement Parser Service Job");
     var start = Instant.now();
