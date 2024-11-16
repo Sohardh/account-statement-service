@@ -27,20 +27,20 @@ public class MailParserService {
     this.jobStatementUrlRepository = jobStatementUrlRepository;
   }
 
-  public void parseAndSaveStatementLinks(LocalDate lastDate) {
+  public boolean parseAndSaveStatementLinks(LocalDate lastDate) {
     List<String> emails;
     try {
       emails = mailService.getEmailBodies(lastDate);
     } catch (Exception e) {
       log.error("There was an error while fetching email bodies", e);
-      return;
+      return false;
     }
     log.info("Parsing {} mails.", emails.size());
     var linksList = new ArrayList<String>();
     for (String emailBody : emails) {
       if (emailBody.isEmpty() || isEmpty(emailBody)) {
         log.info("Email Body is empty. Skipping parsing!");
-        return;
+        return false;
       }
 
       var doc = Jsoup.parse(emailBody);
@@ -50,7 +50,7 @@ public class MailParserService {
 
       if (links.isEmpty()) {
         log.info("No anchor tag found with text 'View your SmartStatement'");
-        return;
+        return false;
       }
       String href = Objects.requireNonNull(links.get(0).parent()).attr("href");
       linksList.add(href);
@@ -63,10 +63,10 @@ public class MailParserService {
         .map(JobStatementUrlModel::new).toList();
     if (urls.isEmpty()) {
       log.info("No new urls found. Skipping save!");
-      return;
+      return false;
     }
     log.info("Saving {} newly found Urls.", urls.size());
     jobStatementUrlRepository.saveAll(urls);
-
+    return true;
   }
 }

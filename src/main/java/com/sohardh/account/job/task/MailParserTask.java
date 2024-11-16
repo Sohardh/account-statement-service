@@ -41,10 +41,12 @@ public class MailParserTask implements Tasklet {
         ACCOUNT_STATEMENT_SERVICE_JOB);
     var lastDate = DateUtil.parseDate(getLastDateString(context), YYYY_MM_DD);
     log.info("Current fetch date is  : {}", lastDate);
-    mailParserService.parseAndSaveStatementLinks(lastDate);
-    var fetchDate = DateUtil.convertToString(DateUtil.getNextMonth(lastDate), YYYY_MM_DD);
-    log.info("Saving next fetch date: {}", fetchDate);
-    saveContext(context, fetchDate);
+    var isSuccess = mailParserService.parseAndSaveStatementLinks(lastDate);
+    if (isSuccess) {
+      var fetchDate = DateUtil.convertToString(DateUtil.getNextMonth(lastDate), YYYY_MM_DD);
+      log.info("Saving next fetch date: {}", fetchDate);
+      saveContext(context, fetchDate);
+    }
 
     return RepeatStatus.FINISHED;
   }

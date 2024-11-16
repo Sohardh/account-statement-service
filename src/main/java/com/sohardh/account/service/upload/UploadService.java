@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
@@ -28,7 +29,6 @@ import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
@@ -38,7 +38,7 @@ public class UploadService {
   private Resource fireflyImportConfigPath;
 
   @Value("${auto.import.secret}")
-  private static String autoImportSecret;
+  private String autoImportSecret;
 
   @Value("${auto.import.url}")
   private String autoImportUrl;
@@ -58,7 +58,7 @@ public class UploadService {
     var filePath = getCsvFile();
     try {
       writeToCsv(statements, filePath);
-      uploadFiles(filePath.getPath()).subscribe();
+      uploadFiles(filePath.getPath());
       statements.forEach(statement -> {
         statement.setIsProcessed(true);
         statement.setProcessedAt(LocalDate.now());
@@ -70,7 +70,7 @@ public class UploadService {
 
   }
 
-  private Mono<String> uploadFiles(String statementPath) throws IOException {
+  private void uploadFiles(String statementPath) throws IOException {
     var webClient = WebClient.builder()
         .baseUrl(autoImportUrl)
         .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + autoImportToken)
@@ -81,15 +81,16 @@ public class UploadService {
     bodyBuilder.part("json", new FileSystemResource(Path.of(fireflyImportConfigPath.getURI())));
     log.info("Uploading statements...");
     var start = Instant.now();
-    return webClient.post()
+    var response = webClient.post()
         .uri(uriBuilder -> uriBuilder.queryParam("secret", autoImportSecret).build())
         .contentType(MediaType.MULTIPART_FORM_DATA)
         .accept(MediaType.APPLICATION_JSON)
         .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
         .retrieve()
         .bodyToMono(String.class)
-        .doOnNext(s -> log.info("Statements uploaded successfully : {}, took : {}s", s,
-            Duration.between(start, Instant.now()).toSeconds()));
+        .block();
+    log.info("Statements uploaded successfully : {}, took : {}s", response,
+        Duration.between(start, Instant.now()).toSeconds());
   }
 
   private void writeToCsv(List<FireflyStatement> statements, File filePath) throws IOException {
@@ -115,9 +116,11 @@ public class UploadService {
     var tagsString = tags == null || tags.length == 0 ? "" : String.join(" ", List.of(tags));
     var dateString = DateUtil.convertToString(statement.getDate(), "yyyy-MM-dd");
     return List.of(dateString, statement.getDescription(), String.valueOf(statement.getDebit()),
-        String.valueOf(statement.getCredit()), statement.getInternalReference(),
+        String.valueOf(statement.getCredit()),
+        Optional.ofNullable(statement.getInternalReference()).orElse(""),
         statement.getOpposingAccount(),
-        statement.getAssetAccount(), tagsString, statement.getCategory());
+        Optional.ofNullable(statement.getAssetAccount()).orElse(""), tagsString,
+        Optional.ofNullable(statement.getCategory()).orElse(""));
   }
 
 }

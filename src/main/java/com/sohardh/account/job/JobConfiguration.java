@@ -7,7 +7,6 @@ import com.sohardh.account.job.task.UploadStatementTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
@@ -17,7 +16,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @Slf4j
-@EnableBatchProcessing
 public class JobConfiguration {
 
   public static final String ACCOUNT_STATEMENT_SERVICE_JOB = "accountStatementServiceJob";
