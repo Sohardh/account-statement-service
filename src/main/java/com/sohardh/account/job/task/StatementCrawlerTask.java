@@ -8,6 +8,7 @@ import com.sohardh.account.repositories.StatementRepository;
 import com.sohardh.account.service.crawler.SmartStatementCrawlerService;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -49,13 +50,15 @@ public class StatementCrawlerTask implements Tasklet {
 
       var descriptions = statements.stream().map(Statement::description).toList();
 
-      var existingDesc = statementRepository.findAllByDescriptions(descriptions).stream()
-          .map(StatementModel::getDescription).toList();
+      var existingDesc = statementRepository.findAllByDescriptions(descriptions);
       if (!existingDesc.isEmpty()) {
         log.info("{} statements are existing. Skipping them.", existingDesc.size());
       }
+
       var newStatements = statements.stream()
-          .filter(statement -> !existingDesc.contains(statement.description()))
+          .filter(statement -> existingDesc.stream().anyMatch(
+              existing -> Objects.equals(existing.getRefNo(), statement.refNo())
+                  && Objects.equals(existing.getDescription(), statement.description())))
           .map(StatementModel::new)
           .toList();
       log.info("Found {} new statements. Saving them...", newStatements.size());
