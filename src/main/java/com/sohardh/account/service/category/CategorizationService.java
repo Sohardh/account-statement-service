@@ -19,7 +19,7 @@ public class CategorizationService {
   private final FireflyStatementRepository fireflyStatementRepository;
 
   @Value("${job.company.name}")
-  private static String jobCompanyName;
+  private String jobCompanyName;
 
   public CategorizationService(StatementRepository statementRepository,
       FireflyStatementRepository fireflyStatementRepository) {
@@ -147,7 +147,7 @@ public class CategorizationService {
     }
   }
 
-  private static void parseAndPopulateSalary(FireflyStatement fireflyStatement) {
+  private void parseAndPopulateSalary(FireflyStatement fireflyStatement) {
     String description = fireflyStatement.getDescription();
     if (description.contains(jobCompanyName) || description.contains("salary")) {
       fireflyStatement.setOpposingAccount(jobCompanyName);
