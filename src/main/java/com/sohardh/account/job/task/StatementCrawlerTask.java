@@ -6,6 +6,7 @@ import com.sohardh.account.model.StatementModel;
 import com.sohardh.account.repositories.JobStatementUrlRepository;
 import com.sohardh.account.repositories.StatementRepository;
 import com.sohardh.account.service.crawler.SmartStatementCrawlerService;
+import com.sohardh.account.util.CommonUtil;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -42,23 +43,24 @@ public class StatementCrawlerTask implements Tasklet {
     for (JobStatementUrlModel model : urls) {
       List<Statement> statements;
       try {
-        statements = smartStatementCrawlerService.getStatements(model.getUrl());
+        statements = smartStatementCrawlerService.getStatements(model);
       } catch (Exception e) {
         log.error("An exception occurred while crawling statements site.", e);
         continue;
       }
 
-      var descriptions = statements.stream().map(Statement::description).toList();
-
-      var existingDesc = statementRepository.findAllByDescriptions(descriptions);
+      var internalReferences = statements.stream().map(CommonUtil::getInternalReference)
+          .toList();
+      var existingDesc = statementRepository.findAllByInternalReference(internalReferences);
       if (!existingDesc.isEmpty()) {
         log.info("{} statements are existing. Skipping them.", existingDesc.size());
       }
 
       var newStatements = statements.stream()
-          .filter(statement -> existingDesc.stream().anyMatch(
+          .filter(statement -> existingDesc.stream().noneMatch(
               existing -> Objects.equals(existing.getRefNo(), statement.refNo())
-                  && Objects.equals(existing.getDescription(), statement.description())))
+                  && Objects.equals(existing.getInternalReference(),
+                  CommonUtil.getInternalReference(statement))))
           .map(StatementModel::new)
           .toList();
       log.info("Found {} new statements. Saving them...", newStatements.size());

@@ -1,6 +1,10 @@
 package com.sohardh.account.service.crawler;
 
+import static io.micrometer.common.util.StringUtils.isBlank;
+
 import com.sohardh.account.dto.Statement;
+import com.sohardh.account.model.JobStatementUrlModel;
+import com.sohardh.account.repositories.JobStatementUrlRepository;
 import jakarta.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,20 +27,19 @@ public class SmartStatementCrawlerService {
   private String hdfcUserName;
 
   private final WebDriver webDriver;
+  private final JobStatementUrlRepository jobStatementUrlRepository;
 
-  public SmartStatementCrawlerService(WebDriver webDriver) {
+  public SmartStatementCrawlerService(WebDriver webDriver,
+      JobStatementUrlRepository jobStatementUrlRepository) {
     this.webDriver = webDriver;
+    this.jobStatementUrlRepository = jobStatementUrlRepository;
   }
 
 
-  public List<Statement> getStatements(String url) {
+  public List<Statement> getStatements(JobStatementUrlModel model) {
 
-    log.info("Crawling statements site with url {}", url);
-    // Navigate to Login page
-    login(url);
-
-    // Get statement url
-    var table = getTable();
+    // Get statement table
+    var table = getTable(model);
     if (table.isEmpty()) {
       return Collections.emptyList();
     }
@@ -51,7 +54,7 @@ public class SmartStatementCrawlerService {
       Elements tds = tr.select("td");
       if (tds.size() >= 7) {
         Statement statement = new Statement(
-            tds.get(0).text(),     // getDate(tds.get(0).text()),
+            tds.get(0).text(),
             tds.get(1).text(),
             tds.get(2).text(),
             tds.get(3).text(),
@@ -65,7 +68,17 @@ public class SmartStatementCrawlerService {
     return statements;
   }
 
-  private Optional<String> getTable() {
+  private Optional<String> getTable(JobStatementUrlModel model) {
+    // cached
+    if (!isBlank(model.getHtmlBody())) {
+      log.info("Table was cached in job_statement_urls. Skipping website crawling.");
+      return Optional.of(model.getUrl());
+    }
+
+    log.info("Crawling statements site with url {}", model.getUrl());
+
+    // Navigate to Login page
+    login(model.getUrl());
 
     // Toggle the statement view
     var viewButton = webDriver.findElement(By.id("View"));
@@ -79,6 +92,9 @@ public class SmartStatementCrawlerService {
     if (outerHTML.isPresent()) {
       log.info("Found the statements table. Website crawled successfully!");
     }
+
+    model.setHtmlBody(outerHTML.orElse(null));
+    jobStatementUrlRepository.save(model);
     return outerHTML;
   }
 

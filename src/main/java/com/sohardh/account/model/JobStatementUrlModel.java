@@ -35,6 +35,10 @@ public class JobStatementUrlModel {
   @Column(name = "ts_processed_at")
   private LocalDate processedAt;
 
+  @Column(name = "tx_html_body")
+  private String htmlBody;
+
+
   public JobStatementUrlModel(String url) {
     this.url = url;
     this.createdAt = LocalDate.now();

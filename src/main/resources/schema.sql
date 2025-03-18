@@ -34,6 +34,7 @@ create table if not exists account_service.job_statement_urls
     ts_created_at         timestamp without time zone not null,
     bl_processed          boolean                     not null,
     ts_processed_at       timestamp without time zone,
+    tx_html_body          text,
     constraint job_statement_urls_tx_url_unique
         unique (tx_url)
 );

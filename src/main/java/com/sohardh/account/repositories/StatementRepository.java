@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 public interface StatementRepository extends JpaRepository<StatementModel, Long> {
 
 
-  @Query("from StatementModel s where s.description in (?1)")
-  List<StatementModel> findAllByDescriptions(List<String> descriptions);
+  @Query("from StatementModel s where s.internalReference in (?1)")
+  List<StatementModel> findAllByInternalReference(List<String> internalReferences);
 
   @Query("from StatementModel s where s.isProcessed = false")
   List<StatementModel> findAllNotProcessed();

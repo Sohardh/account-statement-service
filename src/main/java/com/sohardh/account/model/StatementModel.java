@@ -1,6 +1,7 @@
 package com.sohardh.account.model;
 
 import com.sohardh.account.dto.Statement;
+import com.sohardh.account.util.CommonUtil;
 import com.sohardh.account.util.DateUtil;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -64,6 +65,6 @@ public class StatementModel {
     this.debit = statement.debit();
     this.credit = statement.credit();
     this.closingBalance = statement.closingBalance();
-    this.internalReference = UUID.randomUUID() + "-" + statement.refNo();
+    this.internalReference = CommonUtil.getInternalReference(statement);
   }
 }

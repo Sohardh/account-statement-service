@@ -89,8 +89,15 @@ public class UploadService {
         .retrieve()
         .bodyToMono(String.class)
         .block();
-    log.info("Statements uploaded successfully : {}, took : {}s", response,
-        Duration.between(start, Instant.now()).toSeconds());
+
+    if (log.isDebugEnabled()) {
+      // BE AWARE!!!! This log will print all the statements.
+      log.info("Statements uploaded successfully : {}, took : {}s", response,
+          Duration.between(start, Instant.now()).toSeconds());
+    } else {
+      log.info("Statements uploaded successfully, took : {}s",
+          Duration.between(start, Instant.now()).toSeconds());
+    }
   }
 
   private void writeToCsv(List<FireflyStatement> statements, File filePath) throws IOException {
