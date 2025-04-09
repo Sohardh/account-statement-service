@@ -53,15 +53,9 @@ public class SmartStatementCrawlerService {
     for (Element tr : Jsoup.parse(tableHtml).select("tr")) {
       Elements tds = tr.select("td");
       if (tds.size() >= 7) {
-        Statement statement = new Statement(
-            tds.get(0).text(),
-            tds.get(1).text(),
-            tds.get(2).text(),
-            tds.get(3).text(),
-            parseDouble(tds.get(4).text()),
-            parseDouble(tds.get(5).text()),
-            parseDouble(tds.get(6).text())
-        );
+        Statement statement = new Statement(tds.get(0).text(), tds.get(1).text(), tds.get(2).text(),
+            tds.get(3).text(), parseDouble(tds.get(4).text()), parseDouble(tds.get(5).text()),
+            parseDouble(tds.get(6).text()));
         statements.add(statement);
       }
     }
@@ -72,7 +66,7 @@ public class SmartStatementCrawlerService {
     // cached
     if (!isBlank(model.getHtmlBody())) {
       log.info("Table was cached in job_statement_urls. Skipping website crawling.");
-      return Optional.of(model.getUrl());
+      return Optional.of(model.getHtmlBody());
     }
 
     log.info("Crawling statements site with url {}", model.getUrl());
