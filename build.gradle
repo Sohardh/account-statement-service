@@ -33,17 +33,43 @@ dependencies {
     implementation 'com.google.apis:google-api-services-gmail:v1-rev20220404-2.0.0'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
-    implementation 'org.jsoup:jsoup:1.17.2'
+    implementation 'org.jsoup:jsoup:1.21.1'
     implementation group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '4.18.1'
     implementation group: 'org.seleniumhq.selenium', name: 'selenium-api', version: '4.18.1'
     implementation group: 'org.seleniumhq.selenium', name: 'selenium-chrome-driver', version: '4.18.1'
-    implementation group: 'io.github.bonigarcia', name: 'webdrivermanager', version: '5.7.0'
+    implementation group: 'io.github.bonigarcia', name: 'webdrivermanager', version: '6.1.0'
     implementation 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     implementation group: 'io.hypersistence', name: 'hypersistence-utils-hibernate-63', version: '3.8.2'
     implementation 'org.apache.commons:commons-csv:1.11.0'
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4.2")
+    
+    // Version constraints for transitive dependencies
+    constraints {
+        implementation 'org.springframework:spring-webflux:6.1.14'
+        implementation 'org.springframework:spring-core:6.2.11'
+        implementation 'org.springframework:spring-webmvc:6.2.11'
+        implementation 'org.springframework:spring-web:6.2.11'
+        implementation 'org.springframework:spring-beans:6.2.11'
+        implementation 'org.springframework:spring-expression:6.2.11'
+        implementation 'org.springframework:spring-context:6.2.11'
+        implementation 'io.netty:netty-handler:4.1.118.Final'
+        implementation 'io.netty:netty-codec-http2:4.1.124.Final'
+        implementation 'io.netty:netty-codec-http:4.1.125.Final'
+        implementation 'io.netty:netty-codec:4.1.125.Final'
+        implementation 'com.fasterxml.jackson.core:jackson-core:2.15.0'
+        implementation 'org.springframework.boot:spring-boot:3.3.11'
+        implementation 'com.google.guava:guava:32.0.0-android'
+        implementation 'org.apache.commons:commons-lang3:3.18.0'
+        implementation 'ch.qos.logback:logback-core:1.5.19'
+        implementation 'ch.qos.logback:logback-classic:1.5.19'
+        implementation 'io.projectreactor.netty:reactor-netty-http:1.2.8'
+        implementation 'org.bouncycastle:bcprov-jdk18on:1.78'
+        implementation 'org.quartz-scheduler:quartz:2.4.0'
+        implementation 'org.bouncycastle:bcpkix-jdk18on:1.79'
+        implementation 'io.netty:netty-common:4.1.118.Final'
+    }
 }
 
 bootJar {
